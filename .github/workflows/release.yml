@@ -16,22 +16,16 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            features: ""
           - os: ubuntu-24.04-arm
             target: aarch64-unknown-linux-gnu
-            features: "gpio"
           - os: macos-latest
             target: x86_64-apple-darwin
-            features: ""
           - os: macos-latest
             target: aarch64-apple-darwin
-            features: ""
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            features: ""
           - os: windows-11-arm
             target: aarch64-pc-windows-msvc
-            features: ""
 
     runs-on: ${{ matrix.os }}
 
@@ -50,7 +44,6 @@ jobs:
         with:
           bin: qobine-connect
           target: ${{ matrix.target }}
-          features: ${{ matrix.features || '' }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and upload qobine-disconnect-server
@@ -58,7 +51,6 @@ jobs:
         with:
           bin: disconnect-server
           target: ${{ matrix.target }}
-          features: ${{ matrix.features || '' }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
   flatpak:

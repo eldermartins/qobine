@@ -53,13 +53,6 @@ pub struct ConnectNameArgs {
 }
 
 #[derive(Args, Debug)]
-pub struct GpioArgs {
-    #[clap(long, default_value_t = false)]
-    /// Enable gpio interface for raspberry pi. Pin 16 (gpio-23) will be high when playing
-    pub gpio: bool,
-}
-
-#[derive(Args, Debug)]
 pub struct DelayArgs {
     #[clap(long)]
     /// Delay playback when changing state from paused to playing in milliseconds

@@ -683,7 +683,6 @@ dependencies = [
  "clap",
  "cli-module",
  "controls-module",
- "gpio-module",
  "hostname",
  "num-traits",
  "player-module",
@@ -1677,17 +1676,6 @@ dependencies = [
  "glib-sys",
  "libc",
  "system-deps 9.0.1",
-]
-
-[[package]]
-name = "gpio-module"
-version = "1.0.0"
-dependencies = [
- "controls-module",
- "player-module",
- "rppal",
- "tokio",
- "tracing",
 ]
 
 [[package]]
@@ -3698,15 +3686,6 @@ dependencies = [
  "rtrb",
  "symphonia",
  "thiserror 2.0.21",
-]
-
-[[package]]
-name = "rppal"
-version = "0.22.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1ce3b019009cff02cb6b0e96e7cc2e5c5b90187dc1a490f8ef1521d0596b026"
-dependencies = [
- "libc",
 ]
 
 [[package]]

@@ -3,7 +3,6 @@ members = [
   "controls-module",
   "mpris-module",
   "qobuz-client",
-  "gpio-module",
   "connect-module",
   "cli-module",
   "gtk-module",
@@ -45,7 +44,6 @@ url = "2"
 moka = { version = "0.12", features = ["future"]}
 rodio = "0.22.2"
 tokio_schedule = "0.3"
-rppal = "0.22"
 parking_lot = "0.13.0"
 keepawake = "0.6.0"
 libc = "0.2.186"

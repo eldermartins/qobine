@@ -13,13 +13,9 @@ description.workspace = true
 name = "qobine-connect"
 path = "src/main.rs"
 
-[features]
-gpio = ["gpio-module/gpio"]
-
 [dependencies]
 controls-module = { version = "*", path = "../controls-module" }
 player-module = { version = "*", path = "../player-module" }
-gpio-module = { version = "*", path = "../gpio-module", optional = true }
 cli-module = { version = "*", path = "../cli-module" }
 
 qobuz-connect = { version = "0.1.3", features = ["discovery"] }
