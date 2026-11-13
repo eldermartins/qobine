@@ -4,7 +4,6 @@ members = [
   "mpris-module",
   "qobuz-client",
   "gpio-module",
-  "rfid-module",
   "connect-module",
   "cli-module",
   "gtk-module",

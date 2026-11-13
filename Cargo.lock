@@ -3671,22 +3671,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rfid-module"
-version = "1.0.0"
-dependencies = [
- "clap",
- "cli-module",
- "controls-module",
- "gpio-module",
- "player-module",
- "reqwest 0.12.28",
- "serde",
- "serde_json",
- "shared-playback-module",
- "tokio",
-]
-
-[[package]]
 name = "ring"
 version = "0.17.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"

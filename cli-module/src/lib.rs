@@ -43,17 +43,6 @@ pub struct ConnectArgs {
 }
 
 #[derive(Args, Debug)]
-pub struct RfidArgs {
-    #[clap(long)]
-    /// Use other qobine-web for rfid database
-    pub rfid_server_base_address: Option<String>,
-
-    #[clap(long)]
-    /// Secret for optional qobine rfid server
-    pub rfid_server_secret: Option<String>,
-}
-
-#[derive(Args, Debug)]
 pub struct ConnectNameArgs {
     #[clap(long, default_value = "qobine")]
     pub connect_name: String,

@@ -388,58 +388,6 @@ impl Database {
         })
     }
 
-    pub async fn add_rfid_reference(
-        &self,
-        rfid_id: String,
-        reference: ReferenceType,
-    ) -> AppResult<()> {
-        match reference {
-            ReferenceType::Album(id) => {
-                let id = Some(id);
-
-                sqlx::query!(
-                     "insert into rfid_references (id, reference_type, album_id, playlist_id) values ($1, $2, $3, $4) on conflict(id) do update set reference_type = excluded.reference_type, album_id = excluded.album_id, playlist_id = excluded.playlist_id returning *",
-                     rfid_id,
-                     1,
-                     id,
-                     None::<u32>,
-                 ).fetch_one(&self.pool).await?;
-            }
-            ReferenceType::Playlist(id) => {
-                let id = Some(id);
-
-                sqlx::query!(
-                     "insert into rfid_references (id, reference_type, album_id, playlist_id) values ($1, $2, $3, $4) on conflict(id) do update set reference_type = excluded.reference_type, album_id = excluded.album_id, playlist_id = excluded.playlist_id returning *",
-                     rfid_id,
-                     2,
-                     None::<String>,
-                     id,
-                 ).fetch_one(&self.pool).await?;
-            }
-        }
-        Ok(())
-    }
-
-    pub async fn get_reference(&self, id: &str) -> Option<ReferenceType> {
-        let Ok(db_reference) = sqlx::query_as!(
-            RFIDReference,
-            "select * from rfid_references where id = $1",
-            id
-        )
-        .fetch_one(&self.pool)
-        .await
-        else {
-            return None;
-        };
-
-        match db_reference.reference_type {
-            ReferenceTypeDatabase::Album => Some(ReferenceType::Album(db_reference.album_id?)),
-            ReferenceTypeDatabase::Playlist => Some(ReferenceType::Playlist(
-                db_reference.playlist_id.and_then(|x| x.to_u32())?,
-            )),
-        }
-    }
-
     pub async fn clean_up_cache_entries(
         &self,
         older_than: time::Duration,
@@ -497,35 +445,6 @@ impl Database {
         .await?;
 
         Ok(())
-    }
-}
-
-#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
-pub enum ReferenceType {
-    Album(String),
-    Playlist(u32),
-}
-
-#[derive(sqlx::FromRow)]
-struct RFIDReference {
-    #[allow(dead_code)]
-    id: String,
-    reference_type: ReferenceTypeDatabase,
-    album_id: Option<String>,
-    playlist_id: Option<i64>,
-}
-
-enum ReferenceTypeDatabase {
-    Album = 1,
-    Playlist = 2,
-}
-
-impl From<i64> for ReferenceTypeDatabase {
-    fn from(value: i64) -> Self {
-        match value {
-            1 => Self::Album,
-            _ => Self::Playlist,
-        }
     }
 }
 
