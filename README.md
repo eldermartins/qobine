@@ -4,7 +4,7 @@ An unofficial Qobuz client for GNOME, built with Rust, GTK4 and libadwaita.
 
 This repository is an independent hard fork of [Qobine](https://github.com/SofusA/qobine), focused exclusively on a GNOME desktop experience. The name and application identity are provisional until the first public release of the fork.
 
-**The transition is still in progress.** The workspace currently retains the upstream TUI, Web, RFID, GPIO and other modules while their dependencies are mapped and removed incrementally. The GNOME application is `gtk-module`, and its binary is `qobine-gtk`.
+**The transition is still in progress.** The upstream TUI, Web, RFID, GPIO and macOS-specific modules have been removed. Qobuz Connect, Disconnect and shared playback remain temporarily while their long-term scope is reevaluated. The GNOME application is `gtk-module`, and its binary is `qobine-gtk`.
 
 Qobine requires a paid Qobuz subscription. It does not provide free access to Qobuz and is not affiliated with or endorsed by Qobuz.
 
@@ -38,7 +38,7 @@ cargo build
 cargo run -p gtk-module
 ```
 
-No Web frontend setup, Node.js or SQLx CLI is required for this GTK build. The application creates and migrates its local SQLite database at runtime.
+No Web frontend, Node.js or SQLx CLI setup is required for this GTK build. The application creates and migrates its local SQLite database at runtime.
 
 ## Checks
 
@@ -49,7 +49,7 @@ cargo test --workspace --exclude qobuz-client --exclude gtk-module
 cargo test -p qobuz-client --lib
 cargo test -p gtk-module
 cargo fmt --check
-cargo clippy --workspace --features gpio --exclude gtk-module -- -D warnings
+cargo clippy --workspace --exclude gtk-module -- -D warnings
 cargo clippy -p gtk-module -- -D warnings
 ```
 

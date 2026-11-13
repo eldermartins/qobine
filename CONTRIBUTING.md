@@ -14,7 +14,7 @@ Thank you for contributing to this GNOME-focused Qobine fork. Keep changes small
 - Preserve keyboard navigation, focus and accessibility.
 - Apply upstream fixes selectively through cherry-picks or manual adaptations, not indiscriminate merges.
 
-During the baseline milestone, do not remove modules or redesign screens. Keep documentation, build fixes and functional changes in separate commits.
+Keep module removals, architectural changes and screen redesigns within the milestone that owns them. Do not mix unrelated documentation, build fixes and functional changes in one commit.
 
 ## Development setup
 
@@ -26,7 +26,7 @@ sudo dnf install rust cargo rustfmt clippy gtk4-devel libadwaita-devel webkitgtk
 
 The baseline used Rust/Cargo 1.99.1. The workspace uses Rust edition 2024 and currently does not pin a toolchain file.
 
-Node.js, npm and the SQLx CLI are only needed by the legacy Web/development workflows, not for building and running the GTK application.
+No Node.js, npm or Web frontend setup remains in the workspace. The SQLx CLI is optional for the `just init-database` development workflow and is not required to build or run the GTK application.
 
 ## Build and run
 
@@ -48,11 +48,9 @@ cargo test --workspace --exclude qobuz-client --exclude gtk-module
 cargo test -p qobuz-client --lib
 cargo test -p gtk-module
 cargo fmt --check
-cargo clippy --workspace --features gpio --exclude gtk-module -- -D warnings
+cargo clippy --workspace --exclude gtk-module -- -D warnings
 cargo clippy -p gtk-module -- -D warnings
 ```
-
-Update these commands when the reduction plan removes the GPIO feature.
 
 The integration tests in `qobuz-client/tests/integration_test.rs` use real credentials from the local database and call the Qobuz API. Do not run them routinely or without an intentionally configured account. Never paste their credentials or sensitive responses into an issue or pull request.
 

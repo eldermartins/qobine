@@ -1,29 +1,21 @@
 # Disconnect
-This release brings a self-hostable Connect feature called "Disconnect". 
 
-You can host the server yourself, or you can use my public at: https://qobine-disconnect.iot-lab.dk
-Please don't abuse it 😄 
+Disconnect is a self-hostable shared playback feature. You can host the server yourself or use the public server at <https://qobine-disconnect.iot-lab.dk>. Please do not abuse the public server.
 
-## How to use:
-When running the web or rfid project provide the following flags:
-```
-      --disconnect-device-name <DISCONNECT_DEVICE_NAME>
-          Disconnect device name
-      --disconnect-password <DISCONNECT_PASSWORD>
-          Disconnect password
-      --disconnect-server-url <DISCONNECT_SERVER_URL>
-          Disconnect server url
-```
+## How to use
 
-eg: `web-module --disconnect-device-name livingroom --disconnect-password very-secret --disconnect-server-url https://qobine-disconnect.iot-lab.dk`
+Configure Disconnect in the GTK preferences by selecting Disconnect and providing:
 
-Now when you open the web ui, you will be able to see a music note icon, where you can select all running clients (web or rfid) with the same password.
+- the server URL;
+- the shared password;
+- the device name.
 
-## Why not Qobuz connect?
-Good question. 
+For example, use `https://qobine-disconnect.iot-lab.dk` as the server URL, a shared password, and a device name such as `livingroom`.
 
-The official Qobuz Connect protocol is undocumented, and generally not fun to develop against. 
-The needed code for "Disconnect" is also required for Qobuz Connect to control, activate and deactivate a player (client). 
+Clients using the same server URL, password and device configuration can see and activate one another from the GTK playback-device selector.
 
-Qobuz Connect would also allow us to use the official smartphone app for controlling. 
-I personally don't use the official app, so this is not compelling for me.
+## Why not Qobuz Connect?
+
+The official Qobuz Connect protocol is undocumented and generally difficult to develop against. The code needed for Disconnect also supports Qobuz Connect's player control, activation and deactivation.
+
+Qobuz Connect has the advantage of the official smartphone app. Disconnect remains available for users who prefer the self-hosted workflow.
