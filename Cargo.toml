@@ -3,7 +3,6 @@ members = [
   "controls-module",
   "web-module",
   "mpris-module",
-  "tui-module",
   "qobuz-client",
   "gpio-module",
   "rfid-module",
@@ -13,8 +12,8 @@ members = [
   "disconnect-server-module",
   "disconnect-module",
   "player-module",
-  "macos-module"
-, "shared-playback-module"]
+  "shared-playback-module",
+]
 resolver = "2"
 
 [workspace.package]
@@ -51,15 +50,8 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 url = "2"
 moka = { version = "0.12", features = ["future"]}
 rodio = "0.22.2"
-ratatui = "0.30"
-crossterm = { version = "0.29", features = ["event-stream"] }
 tokio_schedule = "0.3"
 rppal = "0.22"
-ratatui-image = { version = "11", default-features = false, features = ["image-defaults", "crossterm"] }
-unicode-width = "0.2"
-tui-big-text = "0.8"
-tui-input = "0.15"
-image = "0.25"
 skabelon = "0.2.2"
 parking_lot = "0.13.0"
 keepawake = "0.6.0"
