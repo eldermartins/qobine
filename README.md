@@ -4,7 +4,7 @@ An unofficial Qobuz client for GNOME, built with Rust, GTK4 and libadwaita.
 
 This repository is an independent hard fork of [Qobine](https://github.com/SofusA/qobine), focused exclusively on a GNOME desktop experience. The name and application identity are provisional until the first public release of the fork.
 
-**The transition is still in progress.** The upstream TUI, Web, RFID, GPIO and macOS-specific modules have been removed. Qobuz Connect, Disconnect and shared playback remain temporarily while their long-term scope is reevaluated. The GNOME application is `gtk-module`, and its binary is `qobine-gtk`.
+**The transition is still in progress.** The upstream TUI, Web, RFID, GPIO and macOS-specific modules have been removed. Qobuz Connect remains available as an optional renderer, while the name and application identity remain provisional. The GNOME application is `gtk-module`, and its binary is `qobine-gtk`.
 
 Qobine requires a paid Qobuz subscription. It does not provide free access to Qobuz and is not affiliated with or endorsed by Qobuz.
 

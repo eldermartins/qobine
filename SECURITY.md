@@ -4,7 +4,7 @@
 
 There is no public fork release yet. Security fixes are considered for the current development branch and inherited code that affects the GNOME application, authentication, local data, playback or packaging.
 
-Particularly sensitive areas include Qobuz OAuth, locally stored credentials, WebKitGTK, API responses, audio/cache files, optional Connect/Disconnect configuration and Flatpak permissions.
+Particularly sensitive areas include Qobuz OAuth, locally stored credentials, WebKitGTK, API responses, audio/cache files, optional Qobuz Connect configuration and Flatpak permissions.
 
 ## Report a vulnerability
 

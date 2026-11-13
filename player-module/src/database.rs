@@ -110,31 +110,6 @@ impl Database {
         Ok(())
     }
 
-    pub async fn set_disconnect_config(
-        &self,
-        server_url: &str,
-        password: &str,
-        device_name: &str,
-    ) -> AppResult<()> {
-        sqlx::query!(
-            r#"
-        UPDATE configuration
-        SET
-            disconnect_server_url = ?,
-            disconnect_password = ?,
-            device_name = ?
-        WHERE rowid = 1
-        "#,
-            server_url,
-            password,
-            device_name
-        )
-        .execute(&self.pool)
-        .await?;
-
-        Ok(())
-    }
-
     pub async fn set_device_name(&self, device_name: &str) -> AppResult<()> {
         sqlx::query!(
             r#"

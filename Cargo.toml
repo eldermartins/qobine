@@ -6,8 +6,6 @@ members = [
   "connect-module",
   "cli-module",
   "gtk-module",
-  "disconnect-server-module",
-  "disconnect-module",
   "player-module",
   "shared-playback-module",
 ]

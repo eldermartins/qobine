@@ -27,7 +27,7 @@ cargo run -p connect-module -- --no-login
 - The queue loaded or edited in an app replaces or updates qobine's queue without interrupting the current track.
 - Queue edits made in qobine (add or insert tracks, remove, reorder) reach the apps. Starting a new queue in qobine makes it the active device, so playback moves to qobine.
 - The Qobuz apps also find qobine on the LAN, so another account of the household, a Duo partner for instance, can pick it: qobine then joins that account's session until its token expires or the session ends, and returns to its own account's session.
-- The playback device can be switched from the GTK player, including Connect renderers and Disconnect players. Making another device active hands it the current track and position.
+- The playback device can be switched from the GTK player by selecting another Qobuz Connect renderer. Making another renderer active hands it the current track and position.
 
 ## Network
 

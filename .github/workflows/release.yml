@@ -37,13 +37,6 @@ jobs:
           target: ${{ matrix.target }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and upload qobine-disconnect-server
-        uses: taiki-e/upload-rust-binary-action@v1
-        with:
-          bin: disconnect-server
-          target: ${{ matrix.target }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-
   flatpak:
     name: "Flatpak ${{ matrix.variant.arch }}"
     runs-on: ${{ matrix.variant.runner }}

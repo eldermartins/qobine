@@ -53,13 +53,6 @@ pub struct DelayArgs {
     pub sample_rate_change_delay_ms: Option<u64>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct ParsedDisconnect {
-    pub device_name: String,
-    pub password: String,
-    pub server_url: String,
-}
-
 #[derive(Subcommand, Debug)]
 pub enum SharedCommands {
     /// Authenticate with Qobuz via browser
@@ -260,14 +253,12 @@ pub async fn create_player(
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum SharedPlaybackConfig {
     Connect(String),
-    Disconnect(ParsedDisconnect),
     None,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SharedPlaybackDeviceId {
     Connect(i32),
-    Disconnect(String),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

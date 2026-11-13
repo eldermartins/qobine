@@ -2,7 +2,7 @@
 
 An unofficial Qobuz client built with GTK4 and libadwaita.
 
-This is the GNOME application within an independent hard fork of [Qobine](https://github.com/SofusA/qobine). The upstream TUI, Web, RFID and GPIO modules have been removed; Connect/Disconnect support remains provisional. The name and application identity remain provisional.
+This is the GNOME application within an independent hard fork of [Qobine](https://github.com/SofusA/qobine). The upstream TUI, Web, RFID, GPIO and Disconnect modules have been removed; Qobuz Connect remains available. The name and application identity remain provisional.
 
 A paid Qobuz subscription is required. The application is not affiliated with or endorsed by Qobuz.
 
