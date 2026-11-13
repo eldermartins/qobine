@@ -58,15 +58,9 @@ pub enum PlayerError {
         #[snafu(source)]
         source: serde_json::Error,
     },
-    #[snafu(display("Gpio pin {pin} is unavailable"))]
-    GpioUnavailable {
-        pin: u8,
-    },
-    #[snafu(display("Rfid prompt input error"))]
-    RfidInputPanic,
-    #[snafu(display("Port already in use: {port}"))]
-    PortInUse {
-        port: u16,
+    #[snafu(display("Failed to initialize application: {message}"))]
+    ApplicationInit {
+        message: String,
     },
     #[snafu(display("Unable to reorder playlist"))]
     PlaylistReorderError,
@@ -80,14 +74,6 @@ pub enum PlayerError {
     },
     #[snafu(display("{message}"))]
     IoError {
-        message: String,
-    },
-    #[snafu(display("{message}"))]
-    Terminal {
-        message: String,
-    },
-    #[snafu(display("{message}"))]
-    Gtk {
         message: String,
     },
 }

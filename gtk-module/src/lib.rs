@@ -44,7 +44,7 @@ pub fn init(
     set_active_device_tx: mpsc::UnboundedSender<SharedPlaybackDeviceId>,
     shared_playback_config_sender: watch::Sender<SharedPlaybackConfig>,
 ) -> AppResult<()> {
-    libadwaita::init().map_err(|err| PlayerError::Gtk {
+    libadwaita::init().map_err(|err| PlayerError::ApplicationInit {
         message: err.to_string(),
     })?;
 
