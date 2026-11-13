@@ -628,7 +628,6 @@ name = "cli-module"
 version = "1.0.0"
 dependencies = [
  "clap",
- "mpris-module",
  "player-module",
  "time",
  "tokio",

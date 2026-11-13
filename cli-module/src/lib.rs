@@ -33,16 +33,6 @@ pub struct SharedArgs {
 }
 
 #[derive(Args, Debug)]
-pub struct ConnectArgs {
-    /// Enable Qobuz connect
-    #[clap(long, conflicts_with = "disconnect_device_name")]
-    pub connect: bool,
-
-    #[clap(flatten)]
-    pub name_args: ConnectNameArgs,
-}
-
-#[derive(Args, Debug)]
 pub struct ConnectNameArgs {
     #[clap(long, default_value = "qobine")]
     pub connect_name: String,
@@ -63,59 +53,11 @@ pub struct DelayArgs {
     pub sample_rate_change_delay_ms: Option<u64>,
 }
 
-#[derive(Args, Debug)]
-#[allow(clippy::struct_field_names)]
-pub struct DisconnectArgs {
-    /// Disconnect device name
-    #[clap(long)]
-    disconnect_device_name: Option<String>,
-
-    /// Disconnect password
-    #[clap(long)]
-    disconnect_password: Option<String>,
-
-    /// Disconnect server url
-    #[clap(long)]
-    disconnect_server_url: Option<String>,
-}
-
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ParsedDisconnect {
     pub device_name: String,
     pub password: String,
     pub server_url: String,
-}
-
-impl TryFrom<DisconnectArgs> for Option<ParsedDisconnect> {
-    type Error = &'static str;
-
-    fn try_from(args: DisconnectArgs) -> Result<Self, Self::Error> {
-        match (
-            args.disconnect_device_name,
-            args.disconnect_password,
-            args.disconnect_server_url,
-        ) {
-            (None, None, None) => Ok(None),
-
-            (Some(device_name), Some(password), Some(server_url)) => Ok(Some(ParsedDisconnect {
-                device_name,
-                password,
-                server_url,
-            })),
-
-            _ => Err(
-                "disconnect-device-name, disconnect-password and disconnect-server-url must all be provided",
-            ),
-        }
-    }
-}
-
-#[must_use]
-pub fn parse_disconnect_args(args: DisconnectArgs) -> Option<ParsedDisconnect> {
-    Option::<ParsedDisconnect>::try_from(args).unwrap_or_else(|msg| {
-        eprintln!("{msg}");
-        None
-    })
 }
 
 #[derive(Subcommand, Debug)]
