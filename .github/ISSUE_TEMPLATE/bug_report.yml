@@ -1,0 +1,60 @@
+name: Bug report
+description: Report a reproducible problem in this GNOME-focused fork
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Report fork-specific problems here, not in the upstream Qobine tracker.
+        Never include Qobuz passwords, tokens, cookies, authorization codes or unredacted database contents.
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the actual behavior and what you expected instead.
+      placeholder: A clear description of the problem and the expected behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: List the smallest sequence of actions that demonstrates the problem.
+      placeholder: |
+        1. Open the application.
+        2. Navigate to ...
+        3. Select ...
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: Version or commit
+      description: Provide the commit hash or release version you ran.
+      placeholder: 7d87e11b267bb7d362412bb96507799b35b406cb
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Include distribution, GNOME version and installation/build method.
+      placeholder: Fedora 44, GNOME 50, cargo run -p gtk-module
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs or screenshots
+      description: Attach relevant evidence after removing secrets and personal data. Do not paste credentials.
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I tested this fork rather than an upstream package and removed secrets from all attachments.
+          required: true
+        - label: I searched existing issues and did not find this exact report.
+          required: true

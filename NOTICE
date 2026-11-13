@@ -1,0 +1,32 @@
+Qobine
+======
+
+Upstream project
+----------------
+
+Qobine was originally developed by Sofus Addington and its contributors.
+Upstream source: https://github.com/SofusA/qobine
+
+Copyright 2026 Sofus Addington and Qobine contributors.
+
+Qobine started as a fork of hifi.rs and has since diverged.
+hifi.rs source: https://github.com/iamdb/hifi.rs
+
+GNOME-focused fork
+------------------
+
+This repository contains an independent hard fork focused on a native
+GNOME client. Modifications and fork-specific documentation are:
+
+Copyright 2026 Elder Martins and contributors.
+
+The upstream history, copyright notices and license remain preserved.
+This fork is not affiliated with or endorsed by Qobuz or the upstream
+Qobine maintainer. Qobuz is a separate service requiring a paid subscription.
+
+License
+-------
+
+The project is distributed under GNU General Public License version 3 or,
+at your option, any later version (GPL-3.0-or-later). See LICENSE for the
+complete license text.

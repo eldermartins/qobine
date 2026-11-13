@@ -1,78 +1,72 @@
-# qobine
+# Qobine
 
-## High resolution audio player backed by Qobuz
+An unofficial Qobuz client for GNOME, built with Rust, GTK4 and libadwaita.
 
-Powered by [Qobuz](https://www.qobuz.com). Requires a paid subscription. This does not allow you to listen for free.
+This repository is an independent hard fork of [Qobine](https://github.com/SofusA/qobine), focused exclusively on a GNOME desktop experience. The name and application identity are provisional until the first public release of the fork.
 
-This is a mono repo for multiple third party apps for Qobuz.
+**The transition is still in progress.** The workspace currently retains the upstream TUI, Web, RFID, GPIO and other modules while their dependencies are mapped and removed incrementally. The GNOME application is `gtk-module`, and its binary is `qobine-gtk`.
 
-This includes a terminal app, a web server and web-ui, a RFID player, and a minimal Qobuz Connect player. 
+Qobine requires a paid Qobuz subscription. It does not provide free access to Qobuz and is not affiliated with or endorsed by Qobuz.
 
-The web interface is ideal for a setup with a single board computer, e.g. Raspberry Pi, connected to the speaker system and controlled with a smartphone or tablet.
+## Current GNOME baseline
 
-### Terminal UI
-![TUI screenshot](/assets/qobine-tui.png)
+The current upstream-derived application provides:
 
-[More info](/tui-module)
+- Discover, library and playlist pages;
+- Search for albums, artists and playlists;
+- Album, artist and playlist details;
+- Playback, pause, resume, previous/next track and seek;
+- A persistent, reorderable playback queue;
+- Favorites and playlist management.
 
-### GNOME player
-![GTK screenshot](/assets/qobine-gtk.png)
+The baseline also has known limitations, including no track search in the GTK interface, incomplete error and empty states, temporarily unresponsive favorites/playlist operations, and a non-functional MPRIS integration. These are existing issues to address in later milestones, not claims of completed redesign work.
 
-[More info](/tui-module)
+## Build and run from source
 
-### Web UI
-[More info](/web-module)
+Building from source is currently the supported way to run this fork. The upstream Flathub package installs the original Qobine, not this fork.
 
-### RFID player
-![RFID player](/assets/rfid-player.gif?raw=true)
+Linux with GNOME is the reference environment. On Fedora 44, the baseline was validated with Rust/Cargo 1.99.1 and the following packages:
 
-[More info](/rfid-module)
-
-## Connect
-### Qobuz Connect
-Qobuz Connect is supported in the web, tui and rfid players, and in a standalone minimal connect player: qobine shows up as a playback device in the Qobuz apps, and the tui can switch playback between devices.
-This can be enabled with the `--connect` flag and the `connect` cargo feature. It is still experimental; the module README lists what works and the limitations.
-
-[More info on Connect player](/connect-module)
-
-### Qobine Disconnect
-The web player and the rfid player has support for custom self-hostable connect service, `Disconnect`, which allows activating and deactivating multiple running players.
-This does **not** work with the official qobuz smartphone app or web player.
-
-This can be used if you are running multiple players in your home, but would like to control all players centrally on your smartphone through one web player instance.
-
-[More info on Disconnect](/disconnect-module)
-
-### Raspberry pi
-Web, rfid and connect connect players, support setting `GPIO 23` high when music is playing.
-This is hidden behind a feature `GPIO`. Prebuild binaries for aarm64 linux has this enable.
-
-Enable with `--gpio`.
-
-This can be used to control power to amplifier when music is playing.
-
-
-### Build from source
-Linux dependencies: `alsa-sys-devel`.
+```bash
+sudo dnf install rust cargo rustfmt clippy gtk4-devel libadwaita-devel webkitgtk6.0-devel alsa-lib-devel just
 ```
+
+Build the workspace and run the GNOME application:
+
+```bash
 cargo build
+cargo run -p gtk-module
 ```
 
-## Development
-Linux dependencies: `alsa-sys-devel`, `just`, `sqlx-cli`, `npm`.
-1. Setup sqlx: `just create-env-file`. Only needed once. 
-2. Init sqlite database: `init-database`.
-3. Additional for webui development: In `web-module`:
-  - `npm i`. Install npm dependencies. 
-  - `npm run watch`. Watch for style changes. 
+No Web frontend setup, Node.js or SQLx CLI is required for this GTK build. The application creates and migrates its local SQLite database at runtime.
 
-## Get started
-Install your favorites app.
+## Checks
 
-Run `--help` or `<subcommand> --help` to see all available options.
+The baseline commands are:
 
-## Contribution
-Feature requests, issues and contributions are very welcome.
+```bash
+cargo test --workspace --exclude qobuz-client --exclude gtk-module
+cargo test -p qobuz-client --lib
+cargo test -p gtk-module
+cargo fmt --check
+cargo clippy --workspace --features gpio --exclude gtk-module -- -D warnings
+cargo clippy -p gtk-module -- -D warnings
+```
 
-## Credits
-Qobine started as a fork of [hifi.rs](https://github.com/iamdb/hifi.rs) but has since diverged. 
+The `qobuz-client` integration tests use real local Qobuz credentials and make network requests. They are excluded from routine checks and must not be run without an intentionally configured account.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow, scope and verification expectations. Participation follows the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+Project records and policies are available in the [changelog](CHANGELOG.md), [privacy notice](PRIVACY.md), [security policy](SECURITY.md) and [attribution notices](NOTICE).
+
+Report issues with this fork in [this repository's issue tracker](https://github.com/eldermartins/qobine/issues), not in the upstream Qobine tracker. Please do not include Qobuz credentials, tokens, cookies or other secrets in reports.
+
+## Upstream and credits
+
+This fork preserves the history and notices of [Qobine](https://github.com/SofusA/qobine), originally developed by Sofus Addington and its contributors. Qobine itself started as a fork of [hifi.rs](https://github.com/iamdb/hifi.rs) and has since diverged.
+
+## License
+
+This project is licensed under [GPL-3.0-or-later](LICENSE). Modified versions remain subject to the same license and must preserve the applicable notices.
