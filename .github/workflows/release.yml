@@ -45,14 +45,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y pkg-config libasound2-dev
 
-      - name: Build and upload qobine-web
-        uses: taiki-e/upload-rust-binary-action@v1
-        with:
-          bin: qobine-web
-          target: ${{ matrix.target }}
-          features: ${{ matrix.features || '' }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Build and upload qobine-rfid
         uses: taiki-e/upload-rust-binary-action@v1
         with:

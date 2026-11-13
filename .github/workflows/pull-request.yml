@@ -6,7 +6,6 @@ on:
       - main
     paths:
       - "**.rs"
-      - "**.html"
       - "**/Cargo.lock"
       - "**/Cargo.toml"
       - ".github/**"
@@ -16,7 +15,6 @@ on:
       - main
     paths:
       - "**.rs"
-      - "**.html"
       - "**/Cargo.lock"
       - "**/Cargo.toml"
       - ".github/**"
@@ -29,21 +27,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-
-      - name: Setup Node
-        uses: actions/setup-node@v7
-        with:
-          node-version: "latest"
-          cache: npm
-          cache-dependency-path: web-module/package-lock.json
-
-      - name: Web install dependencies
-        working-directory: web-module
-        run: npm i
-
-      - name: Web format check
-        working-directory: web-module
-        run: npm run format:check
 
       - name: Check format
         run: cargo fmt --check
