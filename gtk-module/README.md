@@ -1,29 +1,42 @@
-# Qobine
-An Adwaita-based Qobuz client.
+# Qobine for GNOME
 
-<img src="../assets/gtk-module.png?raw=true">
+An unofficial Qobuz client built with GTK4 and libadwaita.
 
-Listening to your Qobuz music with Qobine: an Adwaita Qobuz client designed for GNOME.
+This is the GNOME application within an independent hard fork of [Qobine](https://github.com/SofusA/qobine). The fork is still in its baseline and reduction phase; the name and application identity remain provisional.
 
-## Installation
-<div align="center">
-    <a href='https://flathub.org/en/apps/io.github.sofusa.qobine'><img width='130' alt='Download on Flathub' src='https://flathub.org/assets/badges/flathub-badge-en.png'/></a>
-</div>
+A paid Qobuz subscription is required. The application is not affiliated with or endorsed by Qobuz.
 
-Qobine is available on Flathub. Install with flatpak:
-```sh
-flatpak install flathub io.github.sofusa.qobine
+## Current capabilities
+
+The validated baseline includes:
+
+- Discover and library browsing;
+- Album, artist and playlist search;
+- Album, artist and playlist pages;
+- Streaming, pause/resume, previous/next track and seek;
+- A persistent, reorderable queue;
+- Favorites and playlist management.
+
+The current interface still has known navigation, responsiveness, asynchronous-state and MPRIS limitations. See the root [README](../README.md) for the project status.
+
+## Run from source
+
+There is currently no separate Flatpak package for this fork. The upstream Flathub entry installs the original Qobine, not this version.
+
+From the repository root, after installing the dependencies listed in the root README:
+
+```bash
+cargo run -p gtk-module
 ```
 
-## Usage
-Upon first launch, a browser spawns where you will need to login to Qobuz with your active streaming subscription.
+On the first launch, a WebKitGTK window opens for Qobuz authentication. Never include credentials, tokens or cookies in screenshots, logs or issue reports.
 
-## Features
-Qobine is currently very bare bone, but more will follow.
+## Development
 
-- View and stream your favorite albums, artists and playlists
-- Search the full Qobuz catalogue
-- Add / remove favorites
+Run the checks documented in the root [README](../README.md) and follow [CONTRIBUTING.md](../CONTRIBUTING.md). Changes should remain incremental and should not rewrite API, authentication or playback without demonstrated need.
 
-## Contributions
-Feature requests, issues and contributions are very welcome.
+Report problems with this fork at [github.com/eldermartins/qobine/issues](https://github.com/eldermartins/qobine/issues), not in the upstream tracker.
+
+## License
+
+GPL-3.0-or-later. See the repository's [LICENSE](../LICENSE).
