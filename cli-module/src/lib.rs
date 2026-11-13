@@ -249,22 +249,3 @@ pub async fn create_player(
 
     Ok(player)
 }
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub enum SharedPlaybackConfig {
-    Connect(String),
-    None,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum SharedPlaybackDeviceId {
-    Connect(i32),
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SharedPlaybackDevice {
-    pub id: SharedPlaybackDeviceId,
-    pub name: String,
-    pub active: bool,
-    pub is_self: bool,
-}

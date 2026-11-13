@@ -1659,6 +1659,7 @@ name = "gtk-module"
 version = "1.0.0"
 dependencies = [
  "cli-module",
+ "connect-module",
  "controls-module",
  "futures",
  "futures-util",
@@ -1669,7 +1670,6 @@ dependencies = [
  "mpris-module",
  "num-traits",
  "player-module",
- "shared-playback-module",
  "tokio",
  "tracing",
  "tracing-subscriber",
@@ -3918,18 +3918,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f40ca3c46823713e0d4209592e8d6e826aa57e928f09752619fc696c499637f6"
 dependencies = [
  "lazy_static",
-]
-
-[[package]]
-name = "shared-playback-module"
-version = "1.0.0"
-dependencies = [
- "cli-module",
- "connect-module",
- "controls-module",
- "player-module",
- "tokio",
- "tracing",
 ]
 
 [[package]]

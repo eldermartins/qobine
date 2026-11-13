@@ -1,4 +1,4 @@
-use cli_module::{SharedPlaybackConfig, create_player, spawn_clean_up_mut};
+use cli_module::{create_player, spawn_clean_up_mut};
 #[cfg(any(windows, target_os = "linux", target_os = "macos"))]
 use controls_module::StatusReceiver;
 #[cfg(target_os = "linux")]
@@ -67,37 +67,33 @@ pub async fn run() -> AppResult<()> {
         ttl_rx,
     );
 
-    let shared_playback_config = if configuration.enable_connect {
-        match configuration.device_name.clone() {
-            Some(device_name) => SharedPlaybackConfig::Connect(device_name),
-            None => SharedPlaybackConfig::None,
-        }
+    let connect_config = if configuration.enable_connect {
+        configuration.device_name.clone()
     } else {
-        SharedPlaybackConfig::None
+        None
     };
 
-    let (shared_playback_config_tx, shared_playback_config_rx) =
-        watch::channel(shared_playback_config);
+    let (connect_config_tx, connect_config_rx) = watch::channel(connect_config);
 
-    let (shared_devices_tx, shared_devices_rx) = watch::channel(Vec::new());
-    let (activate_shared_device_tx, activate_shared_device_rx) = mpsc::unbounded_channel();
-    let shared_playback_player = player.bindings();
-    let shared_playback_client = client.clone();
-    let shared_playback_exit_sender = exit_sender.clone();
+    let (connect_devices_tx, connect_devices_rx) = watch::channel(Vec::new());
+    let (activate_connect_device_tx, activate_connect_device_rx) = mpsc::unbounded_channel();
+    let connect_player = player.bindings();
+    let connect_client = client.clone();
+    let connect_exit_sender = exit_sender.clone();
 
     tokio::spawn(async move {
-        if let Err(err) = shared_playback_module::init(
-            shared_playback_player,
-            shared_playback_client,
-            shared_playback_config_rx,
+        if let Err(err) = connect_module::run_supervised(
+            connect_player,
+            connect_client,
+            connect_config_rx,
             configuration.max_audio_quality,
-            shared_devices_tx,
-            activate_shared_device_rx,
+            connect_devices_tx,
+            activate_connect_device_rx,
             39621,
         )
         .await
         {
-            _ = shared_playback_exit_sender.send(true);
+            _ = connect_exit_sender.send(true);
             eprintln!("{err}");
         }
     });
@@ -122,9 +118,9 @@ pub async fn run() -> AppResult<()> {
             &exit_sender,
             ttl_tx,
             broadcast,
-            shared_devices_rx,
-            activate_shared_device_tx,
-            shared_playback_config_tx,
+            connect_devices_rx,
+            activate_connect_device_tx,
+            connect_config_tx,
         ) {
             _ = exit_sender.send(true);
             eprintln!("{err}");

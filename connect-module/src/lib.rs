@@ -1,13 +1,14 @@
 use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
-use cli_module::{SharedPlaybackDevice, SharedPlaybackDeviceId};
 use controls_module::{
     PositionReceiver, Status, StatusReceiver, TracklistReceiver, VolumeReceiver,
     controls::{Controls, NewQueueItem},
 };
 use num_traits::ToPrimitive;
-use player_module::{AppResult, AudioQuality, client::StreamClient, error::PlayerError};
+use player_module::{
+    AppResult, AudioQuality, client::StreamClient, error::PlayerError, player::PlayerBindings,
+};
 use qobuz_connect::proto::qconnect::{
     AudioQuality as ConnectQuality, BufferState, DeviceType, NetworkType, PlayingState,
     QueueTrackRef,
@@ -47,12 +48,20 @@ async fn start_discovery(
     Discovery::start(device, app_id, port).await
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-/// A device of the Qobuz Connect session, by its renderer id in that session.
-struct ConnectDevice {
+#[derive(Clone, Debug, PartialEq, Eq)]
+/// A renderer of the Qobuz Connect session, presented to the GTK output-device selector.
+pub struct ConnectDevice {
     pub id: i32,
     pub name: String,
     pub active: bool,
+    pub is_self: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct RendererInfo {
+    id: i32,
+    name: String,
+    active: bool,
 }
 
 struct Connect {
@@ -71,10 +80,10 @@ struct Connect {
     pending: Option<Pending>,
     refused: bool,
     deferred: Option<Deferred>,
-    devices: watch::Sender<Vec<SharedPlaybackDevice>>,
+    devices: watch::Sender<Vec<ConnectDevice>>,
     renderer_id: Option<i32>,
     activations: mpsc::UnboundedReceiver<i32>,
-    renderers: Vec<ConnectDevice>,
+    renderers: Vec<RendererInfo>,
     taking_over: bool,
     remote: Option<Remote>,
     played: Option<u64>,
@@ -116,7 +125,7 @@ pub async fn run_connect(
     status_receiver: StatusReceiver,
     volume_receiver: VolumeReceiver,
     max_audio_quality: AudioQuality,
-    devices: watch::Sender<Vec<SharedPlaybackDevice>>,
+    devices: watch::Sender<Vec<ConnectDevice>>,
     activations: mpsc::UnboundedReceiver<i32>,
     port: u16,
 ) -> AppResult<()> {
@@ -180,6 +189,214 @@ pub async fn run_connect(
             .map_err(|err| map_err(&err))?;
 
         connect.reset();
+    }
+}
+
+/// Supervises the optional Qobuz Connect renderer for the GTK application.
+///
+/// `None` disables Connect; `Some(device_name)` runs it under that name. The
+/// renderer is restarted when its configuration or maximum audio quality
+/// changes, and renderer activations from the UI are routed to the active
+/// backend.
+pub async fn run_supervised(
+    player_bindings: PlayerBindings,
+    client: Arc<StreamClient>,
+    mut config: watch::Receiver<Option<String>>,
+    max_audio_quality: AudioQuality,
+    devices: watch::Sender<Vec<ConnectDevice>>,
+    mut activations: mpsc::UnboundedReceiver<i32>,
+    connect_port: u16,
+) -> AppResult<()> {
+    let mut activations_open = true;
+    let mut quality_changes_open = true;
+    let mut current_max_audio_quality = max_audio_quality;
+    let mut quality_changes = player_bindings.controls.subscribe();
+
+    loop {
+        let connect_name = config.borrow_and_update().clone();
+
+        let Some(connect_name) = connect_name else {
+            tracing::info!("Qobuz Connect disabled");
+            devices.send_replace(Vec::new());
+
+            tokio::select! {
+                changed = config.changed() => {
+                    if changed.is_err() {
+                        return Ok(());
+                    }
+                }
+
+                change = quality_changes.recv(), if quality_changes_open => {
+                    match change {
+                        Ok(
+                            controls_module::controls::ControlCommand::
+                                StreamingConfiguration {
+                                    configuration:
+                                        controls_module::controls::
+                                            StreamingConfiguration::
+                                            SetMaxAudioQuality {
+                                                new_quality,
+                                            },
+                                },
+                        ) => {
+                            if new_quality != current_max_audio_quality {
+                                tracing::info!(
+                                    "Max audio quality changed from {} to {}",
+                                    current_max_audio_quality,
+                                    new_quality
+                                );
+
+                                current_max_audio_quality = new_quality;
+                            }
+                        }
+
+                        Ok(_) => {}
+
+                        Err(
+                            tokio::sync::broadcast::error::RecvError::
+                                Lagged(skipped),
+                        ) => {
+                            tracing::warn!(
+                                "Qobuz Connect configuration listener \
+                                 lagged by {skipped} messages"
+                            );
+                        }
+
+                        Err(
+                            tokio::sync::broadcast::error::RecvError::
+                                Closed,
+                        ) => {
+                            quality_changes_open = false;
+                        }
+                    }
+                }
+
+                activation = activations.recv(), if activations_open => {
+                    if activation.is_none() {
+                        activations_open = false;
+                    }
+                }
+            }
+
+            continue;
+        };
+
+        devices.send_replace(Vec::new());
+
+        tracing::info!(
+            "Starting Qobuz Connect as {connect_name} with max audio \
+             quality {current_max_audio_quality}"
+        );
+
+        let (activation_sender, activation_receiver) = mpsc::unbounded_channel();
+
+        let backend = run_connect(
+            client.clone(),
+            connect_name.clone(),
+            player_bindings.controls.clone(),
+            player_bindings.position_receiver.clone(),
+            player_bindings.tracklist_receiver.clone(),
+            player_bindings.status_receiver.clone(),
+            player_bindings.volume_receiver.clone(),
+            current_max_audio_quality,
+            devices.clone(),
+            activation_receiver,
+            connect_port,
+        );
+
+        tokio::pin!(backend);
+
+        loop {
+            tokio::select! {
+                result = &mut backend => {
+                    devices.send_replace(Vec::new());
+                    return result;
+                }
+
+                changed = config.changed() => {
+                    if changed.is_err() {
+                        devices.send_replace(Vec::new());
+                        return Ok(());
+                    }
+
+                    let next = config.borrow_and_update().clone();
+
+                    if next == Some(connect_name.clone()) {
+                        continue;
+                    }
+
+                    tracing::info!("Qobuz Connect configuration changed");
+                    break;
+                }
+
+                change = quality_changes.recv(), if quality_changes_open => {
+                    match change {
+                        Ok(
+                            controls_module::controls::ControlCommand::
+                                StreamingConfiguration {
+                                    configuration:
+                                        controls_module::controls::
+                                            StreamingConfiguration::
+                                            SetMaxAudioQuality {
+                                                new_quality,
+                                            },
+                                },
+                        ) => {
+                            if new_quality == current_max_audio_quality {
+                                continue;
+                            }
+
+                            tracing::info!(
+                                "Max audio quality changed from {} to {}; \
+                                 restarting Qobuz Connect",
+                                current_max_audio_quality,
+                                new_quality
+                            );
+
+                            current_max_audio_quality = new_quality;
+                            break;
+                        }
+
+                        Ok(_) => {}
+
+                        Err(
+                            tokio::sync::broadcast::error::RecvError::
+                                Lagged(skipped),
+                        ) => {
+                            tracing::warn!(
+                                "Qobuz Connect configuration listener \
+                                 lagged by {skipped} messages"
+                            );
+                        }
+
+                        Err(
+                            tokio::sync::broadcast::error::RecvError::
+                                Closed,
+                        ) => {
+                            quality_changes_open = false;
+                        }
+                    }
+                }
+
+                activation = activations.recv(), if activations_open => {
+                    match activation {
+                        Some(id) => {
+                            if activation_sender.send(id).is_err() {
+                                tracing::debug!(
+                                    "Qobuz Connect activation receiver closed"
+                                );
+                            }
+                        }
+
+                        None => {
+                            activations_open = false;
+                        }
+                    }
+                }
+            }
+        }
+
+        devices.send_replace(Vec::new());
     }
 }
 
@@ -332,12 +549,12 @@ fn activate(session: &mut Session, id: i32) -> Result<(), Error> {
     Ok(())
 }
 
-fn update(renderers: &mut Vec<ConnectDevice>, event: RendererEvent) -> bool {
+fn update(renderers: &mut Vec<RendererInfo>, event: RendererEvent) -> bool {
     match event {
         RendererEvent::Added { id, device } | RendererEvent::Updated { id, device } => {
             match renderers.iter_mut().find(|renderer| renderer.id == id) {
                 Some(renderer) => renderer.name = device.name,
-                None => renderers.push(ConnectDevice {
+                None => renderers.push(RendererInfo {
                     id,
                     name: device.name,
                     active: false,
@@ -351,7 +568,7 @@ fn update(renderers: &mut Vec<ConnectDevice>, event: RendererEvent) -> bool {
     true
 }
 
-fn set_active(renderers: &mut [ConnectDevice], id: Option<i32>) {
+fn set_active(renderers: &mut [RendererInfo], id: Option<i32>) {
     for renderer in renderers {
         renderer.active = Some(renderer.id) == id;
     }
@@ -808,8 +1025,8 @@ impl Connect {
         let devices = self
             .renderers
             .iter()
-            .map(|renderer| SharedPlaybackDevice {
-                id: SharedPlaybackDeviceId::Connect(renderer.id),
+            .map(|renderer| ConnectDevice {
+                id: renderer.id,
                 name: renderer.name.clone(),
                 active: renderer.active,
                 is_self: Some(renderer.id) == self.renderer_id,
@@ -1141,7 +1358,7 @@ mod tests {
             1
         );
         assert!(update(&mut renderers, RendererEvent::Removed { id: 6 }));
-        let expected = ConnectDevice {
+        let expected = RendererInfo {
             id: 4,
             name: "my phone".to_owned(),
             active: false,

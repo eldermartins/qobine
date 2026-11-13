@@ -2,7 +2,6 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::Arc;
 
-use cli_module::SharedPlaybackConfig;
 use futures::executor::block_on;
 use gtk::gio;
 use gtk::prelude::*;
@@ -123,7 +122,7 @@ fn preferences_page(
 
     page.add(&queue_group(controls, &configuration));
 
-    page.add(&shared_playback_group(
+    page.add(&connect_group(
         &configuration,
         ui_event_sender,
         database.clone(),
@@ -336,20 +335,20 @@ fn logout_group(exit_sender: ExitSender, database: Arc<Database>) -> adw::Prefer
     group
 }
 
-fn shared_playback_group(
+fn connect_group(
     configuration: &Configuration,
     ui_event_sender: &UiEventSender,
     database: Arc<Database>,
 ) -> adw::PreferencesGroup {
     let group = adw::PreferencesGroup::new();
-    group.set_title("Shared playback");
+    group.set_title("Qobuz Connect");
 
     /*
-     * Shared playback type.
+     * Qobuz Connect state.
      */
 
     let playback_type_row = adw::ActionRow::new();
-    playback_type_row.set_title("Shared playback type");
+    playback_type_row.set_title("Qobuz Connect");
 
     let playback_type = adw::ToggleGroup::new();
     playback_type.set_homogeneous(true);
@@ -391,7 +390,7 @@ fn shared_playback_group(
      */
 
     let save = adw::ButtonRow::new();
-    save.set_title("Save shared playback configuration");
+    save.set_title("Save Qobuz Connect configuration");
     save.add_css_class("suggested-action");
     save.set_sensitive(false);
 
@@ -402,8 +401,8 @@ fn shared_playback_group(
     let initial_connect_device_name = configuration.device_name.clone().unwrap_or_default();
 
     let initial_config = match initial_type {
-        "connect" => SharedPlaybackConfig::Connect(initial_connect_device_name.clone()),
-        _ => SharedPlaybackConfig::None,
+        "connect" => Some(initial_connect_device_name.clone()),
+        _ => None,
     };
 
     let saved_state = Rc::new(RefCell::new((initial_config, initial_connect_device_name)));
@@ -420,8 +419,8 @@ fn shared_playback_group(
             let connect_device_name = connect_device_row.text().trim().to_owned();
 
             let config = match playback_type.active_name().as_deref() {
-                Some("connect") => SharedPlaybackConfig::Connect(connect_device_name.clone()),
-                _ => SharedPlaybackConfig::None,
+                Some("connect") => Some(connect_device_name.clone()),
+                _ => None,
             };
 
             (config, connect_device_name)
@@ -492,10 +491,9 @@ fn shared_playback_group(
              * Apply the new runtime configuration immediately.
              */
 
-            if let Err(error) =
-                ui_event_sender.send(crate::UiEvent::SharedPlaybackConfig(config.clone()))
+            if let Err(error) = ui_event_sender.send(crate::UiEvent::ConnectConfig(config.clone()))
             {
-                tracing::error!("Failed to apply shared playback configuration: {error}");
+                tracing::error!("Failed to apply Qobuz Connect configuration: {error}");
                 return;
             }
 

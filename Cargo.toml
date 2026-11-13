@@ -7,7 +7,6 @@ members = [
   "cli-module",
   "gtk-module",
   "player-module",
-  "shared-playback-module",
 ]
 resolver = "2"
 
