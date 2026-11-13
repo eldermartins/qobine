@@ -1,4 +1,4 @@
-use cli_module::{ParsedDisconnect, SharedPlaybackConfig, create_player, spawn_clean_up_mut};
+use cli_module::{SharedPlaybackConfig, create_player, spawn_clean_up_mut};
 #[cfg(any(windows, target_os = "linux", target_os = "macos"))]
 use controls_module::StatusReceiver;
 #[cfg(target_os = "linux")]
@@ -71,21 +71,6 @@ pub async fn run() -> AppResult<()> {
         match configuration.device_name.clone() {
             Some(device_name) => SharedPlaybackConfig::Connect(device_name),
             None => SharedPlaybackConfig::None,
-        }
-    } else if configuration.enable_disconnect {
-        match (
-            configuration.disconnect_server_url.clone(),
-            configuration.disconnect_password.clone(),
-            configuration.device_name.clone(),
-        ) {
-            (Some(server_url), Some(password), Some(device_name)) => {
-                SharedPlaybackConfig::Disconnect(ParsedDisconnect {
-                    server_url,
-                    password,
-                    device_name,
-                })
-            }
-            _ => SharedPlaybackConfig::None,
         }
     } else {
         SharedPlaybackConfig::None
