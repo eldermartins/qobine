@@ -2,16 +2,15 @@
 
 Qobuz Connect support through the `qobuz-connect` crate. qobine joins the account's Connect session as a renderer, so the Qobuz apps list it as a playback device.
 
-Can be run as a standalone player, or enabled in web, rfid and tui with the `--connect` flag, which exists only when the frontend is built with its `connect` cargo feature. The device name comes from `--connect-name`.
+Can be run as a standalone player or enabled from the GTK preferences. The standalone device name comes from `--connect-name`.
 
 ```
 cargo run -p connect-module -- --connect-name qobine
-cargo run -p tui-module --features connect -- --connect --connect-name qobine
 ```
 
 How to build "release" (how I build at least):
 ```
-RUSTFLAGS="-C target-cpu=native" cargo build --release -p tui-module --features connect
+RUSTFLAGS="-C target-cpu=native" cargo build --release -p connect-module
 ```
 
 ## Without a login
@@ -28,7 +27,7 @@ cargo run -p connect-module -- --no-login
 - The queue loaded or edited in an app replaces or updates qobine's queue without interrupting the current track.
 - Queue edits made in qobine (add or insert tracks, remove, reorder) reach the apps. Starting a new queue in qobine makes it the active device, so playback moves to qobine.
 - The Qobuz apps also find qobine on the LAN, so another account of the household, a Duo partner for instance, can pick it: qobine then joins that account's session until its token expires or the session ends, and returns to its own account's session.
-- The playback device can be switched from the TUI: `c` lists the devices of the Connect session next to the disconnect players, Enter makes the selected one active. The server then hands it the current track and position.
+- The playback device can be switched from the GTK player by selecting another Qobuz Connect renderer. Making another renderer active hands it the current track and position.
 
 ## Network
 

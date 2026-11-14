@@ -33,27 +33,6 @@ pub struct SharedArgs {
 }
 
 #[derive(Args, Debug)]
-pub struct ConnectArgs {
-    /// Enable Qobuz connect
-    #[clap(long, conflicts_with = "disconnect_device_name")]
-    pub connect: bool,
-
-    #[clap(flatten)]
-    pub name_args: ConnectNameArgs,
-}
-
-#[derive(Args, Debug)]
-pub struct RfidArgs {
-    #[clap(long)]
-    /// Use other qobine-web for rfid database
-    pub rfid_server_base_address: Option<String>,
-
-    #[clap(long)]
-    /// Secret for optional qobine rfid server
-    pub rfid_server_secret: Option<String>,
-}
-
-#[derive(Args, Debug)]
 pub struct ConnectNameArgs {
     #[clap(long, default_value = "qobine")]
     pub connect_name: String,
@@ -61,13 +40,6 @@ pub struct ConnectNameArgs {
     #[clap(long, default_value_t = 39621)]
     /// Port the Qobuz apps reach qobine on over the LAN
     pub connect_port: u16,
-}
-
-#[derive(Args, Debug)]
-pub struct GpioArgs {
-    #[clap(long, default_value_t = false)]
-    /// Enable gpio interface for raspberry pi. Pin 16 (gpio-23) will be high when playing
-    pub gpio: bool,
 }
 
 #[derive(Args, Debug)]
@@ -79,61 +51,6 @@ pub struct DelayArgs {
     #[clap(long)]
     /// Delay playback when changing sample rate in milliseconds
     pub sample_rate_change_delay_ms: Option<u64>,
-}
-
-#[derive(Args, Debug)]
-#[allow(clippy::struct_field_names)]
-pub struct DisconnectArgs {
-    /// Disconnect device name
-    #[clap(long)]
-    disconnect_device_name: Option<String>,
-
-    /// Disconnect password
-    #[clap(long)]
-    disconnect_password: Option<String>,
-
-    /// Disconnect server url
-    #[clap(long)]
-    disconnect_server_url: Option<String>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct ParsedDisconnect {
-    pub device_name: String,
-    pub password: String,
-    pub server_url: String,
-}
-
-impl TryFrom<DisconnectArgs> for Option<ParsedDisconnect> {
-    type Error = &'static str;
-
-    fn try_from(args: DisconnectArgs) -> Result<Self, Self::Error> {
-        match (
-            args.disconnect_device_name,
-            args.disconnect_password,
-            args.disconnect_server_url,
-        ) {
-            (None, None, None) => Ok(None),
-
-            (Some(device_name), Some(password), Some(server_url)) => Ok(Some(ParsedDisconnect {
-                device_name,
-                password,
-                server_url,
-            })),
-
-            _ => Err(
-                "disconnect-device-name, disconnect-password and disconnect-server-url must all be provided",
-            ),
-        }
-    }
-}
-
-#[must_use]
-pub fn parse_disconnect_args(args: DisconnectArgs) -> Option<ParsedDisconnect> {
-    Option::<ParsedDisconnect>::try_from(args).unwrap_or_else(|msg| {
-        eprintln!("{msg}");
-        None
-    })
 }
 
 #[derive(Subcommand, Debug)]
@@ -331,25 +248,4 @@ pub async fn create_player(
     )?;
 
     Ok(player)
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub enum SharedPlaybackConfig {
-    Connect(String),
-    Disconnect(ParsedDisconnect),
-    None,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum SharedPlaybackDeviceId {
-    Connect(i32),
-    Disconnect(String),
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SharedPlaybackDevice {
-    pub id: SharedPlaybackDeviceId,
-    pub name: String,
-    pub active: bool,
-    pub is_self: bool,
 }

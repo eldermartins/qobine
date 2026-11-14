@@ -2,8 +2,6 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::Arc;
 
-use cli_module::ParsedDisconnect;
-use cli_module::SharedPlaybackConfig;
 use futures::executor::block_on;
 use gtk::gio;
 use gtk::prelude::*;
@@ -124,7 +122,7 @@ fn preferences_page(
 
     page.add(&queue_group(controls, &configuration));
 
-    page.add(&shared_playback_group(
+    page.add(&connect_group(
         &configuration,
         ui_event_sender,
         database.clone(),
@@ -337,37 +335,20 @@ fn logout_group(exit_sender: ExitSender, database: Arc<Database>) -> adw::Prefer
     group
 }
 
-fn shared_playback_group(
+fn connect_group(
     configuration: &Configuration,
     ui_event_sender: &UiEventSender,
     database: Arc<Database>,
 ) -> adw::PreferencesGroup {
     let group = adw::PreferencesGroup::new();
-    group.set_title("Shared playback");
-
-    let info = gtk::Button::builder()
-        .icon_name("info-outline-symbolic")
-        .tooltip_text("Open Disconnect information page")
-        .css_classes(["flat"])
-        .build();
-
-    info.connect_clicked(move |_| {
-        if let Err(error) = gio::AppInfo::launch_default_for_uri(
-            "https://github.com/SofusA/qobine/tree/main/disconnect-module",
-            None::<&gio::AppLaunchContext>,
-        ) {
-            tracing::error!("Failed to open information page: {error}");
-        }
-    });
-
-    group.set_header_suffix(Some(&info));
+    group.set_title("Qobuz Connect");
 
     /*
-     * Shared playback type.
+     * Qobuz Connect state.
      */
 
     let playback_type_row = adw::ActionRow::new();
-    playback_type_row.set_title("Shared playback type");
+    playback_type_row.set_title("Qobuz Connect");
 
     let playback_type = adw::ToggleGroup::new();
     playback_type.set_homogeneous(true);
@@ -384,19 +365,11 @@ fn shared_playback_group(
         .label("Connect")
         .build();
 
-    let disconnect_toggle = adw::Toggle::builder()
-        .name("disconnect")
-        .label("Disconnect")
-        .build();
-
     playback_type.add(disabled_toggle);
     playback_type.add(connect_toggle);
-    playback_type.add(disconnect_toggle);
 
     let initial_type = if configuration.enable_connect {
         "connect"
-    } else if configuration.enable_disconnect {
-        "disconnect"
     } else {
         "disabled"
     };
@@ -413,80 +386,26 @@ fn shared_playback_group(
     connect_device_row.set_text(configuration.device_name.as_deref().unwrap_or_default());
 
     /*
-     * Disconnect configuration.
-     */
-
-    let server_row = adw::EntryRow::new();
-    server_row.set_title("Server URL");
-    server_row.set_text(
-        configuration
-            .disconnect_server_url
-            .as_deref()
-            .unwrap_or_default(),
-    );
-
-    let password_row = adw::PasswordEntryRow::new();
-    password_row.set_title("Password");
-    password_row.set_text(
-        configuration
-            .disconnect_password
-            .as_deref()
-            .unwrap_or_default(),
-    );
-
-    let disconnect_device_row = adw::EntryRow::new();
-    disconnect_device_row.set_title("Device name");
-    disconnect_device_row.set_text(configuration.device_name.as_deref().unwrap_or_default());
-
-    /*
      * Save button.
      */
 
     let save = adw::ButtonRow::new();
-    save.set_title("Save shared playback configuration");
+    save.set_title("Save Qobuz Connect configuration");
     save.add_css_class("suggested-action");
     save.set_sensitive(false);
 
     /*
      * Capture the initially persisted state.
-     *
-     * All stored values are included, including values belonging to the
-     * inactive implementation.
      */
 
     let initial_connect_device_name = configuration.device_name.clone().unwrap_or_default();
 
-    let initial_server_url = configuration
-        .disconnect_server_url
-        .clone()
-        .unwrap_or_default();
-
-    let initial_password = configuration
-        .disconnect_password
-        .clone()
-        .unwrap_or_default();
-
-    let initial_disconnect_device_name = configuration.device_name.clone().unwrap_or_default();
-
     let initial_config = match initial_type {
-        "connect" => SharedPlaybackConfig::Connect(initial_connect_device_name.clone()),
-
-        "disconnect" => SharedPlaybackConfig::Disconnect(ParsedDisconnect {
-            server_url: initial_server_url.clone(),
-            password: initial_password.clone(),
-            device_name: initial_disconnect_device_name.clone(),
-        }),
-
-        _ => SharedPlaybackConfig::None,
+        "connect" => Some(initial_connect_device_name.clone()),
+        _ => None,
     };
 
-    let saved_state = Rc::new(RefCell::new((
-        initial_config,
-        initial_connect_device_name,
-        initial_server_url,
-        initial_password,
-        initial_disconnect_device_name,
-    )));
+    let saved_state = Rc::new(RefCell::new((initial_config, initial_connect_device_name)));
 
     /*
      * Read the complete current form state.
@@ -495,38 +414,16 @@ fn shared_playback_group(
     let current_state = {
         let playback_type = playback_type.clone();
         let connect_device_row = connect_device_row.clone();
-        let server_row = server_row.clone();
-        let password_row = password_row.clone();
-        let disconnect_device_row = disconnect_device_row.clone();
 
         Rc::new(move || {
             let connect_device_name = connect_device_row.text().trim().to_owned();
 
-            let server_url = server_row.text().trim().to_owned();
-
-            let password = password_row.text().to_string();
-
-            let disconnect_device_name = disconnect_device_row.text().trim().to_owned();
-
             let config = match playback_type.active_name().as_deref() {
-                Some("connect") => SharedPlaybackConfig::Connect(connect_device_name.clone()),
-
-                Some("disconnect") => SharedPlaybackConfig::Disconnect(ParsedDisconnect {
-                    server_url: server_url.clone(),
-                    password: password.clone(),
-                    device_name: disconnect_device_name.clone(),
-                }),
-
-                _ => SharedPlaybackConfig::None,
+                Some("connect") => Some(connect_device_name.clone()),
+                _ => None,
             };
 
-            (
-                config,
-                connect_device_name,
-                server_url,
-                password,
-                disconnect_device_name,
-            )
+            (config, connect_device_name)
         })
     };
 
@@ -538,62 +435,23 @@ fn shared_playback_group(
     let validate = {
         let playback_type = playback_type.clone();
         let connect_device_row = connect_device_row.clone();
-        let server_row = server_row.clone();
-        let password_row = password_row.clone();
-        let disconnect_device_row = disconnect_device_row.clone();
         let save = save.clone();
         let saved_state = saved_state.clone();
         let current_state = current_state.clone();
 
         Rc::new(move || {
-            let active_name = playback_type.active_name();
-
-            let connect_active = active_name.as_deref() == Some("connect");
-
-            let disconnect_active = active_name.as_deref() == Some("disconnect");
-
-            /*
-             * Only show inputs belonging to the selected implementation.
-             */
+            let connect_active = playback_type.active_name().as_deref() == Some("connect");
 
             connect_device_row.set_visible(connect_active);
-
-            server_row.set_visible(disconnect_active);
-            password_row.set_visible(disconnect_active);
-            disconnect_device_row.set_visible(disconnect_active);
-
-            /*
-             * Only validate inputs belonging to the selected implementation.
-             */
 
             let connect_name_valid =
                 !connect_active || !connect_device_row.text().trim().is_empty();
 
-            let server_valid = !disconnect_active || !server_row.text().trim().is_empty();
-
-            let password_valid = !disconnect_active || !password_row.text().is_empty();
-
-            let disconnect_name_valid =
-                !disconnect_active || !disconnect_device_row.text().trim().is_empty();
-
             connect_device_row.set_css_classes(if connect_name_valid { &[] } else { &["error"] });
-
-            server_row.set_css_classes(if server_valid { &[] } else { &["error"] });
-
-            password_row.set_css_classes(if password_valid { &[] } else { &["error"] });
-
-            disconnect_device_row.set_css_classes(if disconnect_name_valid {
-                &[]
-            } else {
-                &["error"]
-            });
-
-            let valid =
-                connect_name_valid && server_valid && password_valid && disconnect_name_valid;
 
             let changed = *saved_state.borrow() != current_state();
 
-            save.set_sensitive(valid && changed);
+            save.set_sensitive(connect_name_valid && changed);
         })
     };
 
@@ -613,30 +471,6 @@ fn shared_playback_group(
         }
     });
 
-    server_row.connect_changed({
-        let validate = validate.clone();
-
-        move |_| {
-            validate();
-        }
-    });
-
-    password_row.connect_changed({
-        let validate = validate.clone();
-
-        move |_| {
-            validate();
-        }
-    });
-
-    disconnect_device_row.connect_changed({
-        let validate = validate.clone();
-
-        move |_| {
-            validate();
-        }
-    });
-
     /*
      * Apply and persist the configuration.
      */
@@ -649,33 +483,23 @@ fn shared_playback_group(
         let ui_event_sender = ui_event_sender.clone();
 
         move |_| {
-            let (config, connect_device_name, server_url, password, disconnect_device_name) =
-                current_state();
+            let (config, connect_device_name) = current_state();
 
-            let active_name = playback_type.active_name();
-
-            let enable_connect = active_name.as_deref() == Some("connect");
-
-            let enable_disconnect = active_name.as_deref() == Some("disconnect");
+            let enable_connect = playback_type.active_name().as_deref() == Some("connect");
 
             /*
              * Apply the new runtime configuration immediately.
              */
 
-            if let Err(error) =
-                ui_event_sender.send(crate::UiEvent::SharedPlaybackConfig(config.clone()))
+            if let Err(error) = ui_event_sender.send(crate::UiEvent::ConnectConfig(config.clone()))
             {
-                tracing::error!("Failed to apply shared playback configuration: {error}");
+                tracing::error!("Failed to apply Qobuz Connect configuration: {error}");
                 return;
             }
 
-            saved_state.borrow_mut().clone_from(&(
-                config,
-                connect_device_name.clone(),
-                server_url.clone(),
-                password.clone(),
-                disconnect_device_name.clone(),
-            ));
+            saved_state
+                .borrow_mut()
+                .clone_from(&(config, connect_device_name.clone()));
 
             validate();
 
@@ -686,55 +510,22 @@ fn shared_playback_group(
             let database = Arc::clone(&database);
 
             glib::MainContext::default().spawn_local(async move {
-                /*
-                 * Preserve the values for both implementations, even when
-                 * they are not currently selected.
-                 */
-
                 if let Err(error) = database.set_device_name(&connect_device_name).await {
                     tracing::error!("Failed to save Connect device name: {error}");
                     return;
                 }
 
-                if let Err(error) = database
-                    .set_disconnect_config(&server_url, &password, &disconnect_device_name)
-                    .await
-                {
-                    tracing::error!("Failed to save Disconnect configuration: {error}");
+                if let Err(error) = database.set_disconnect_enabled(false).await {
+                    tracing::error!("Failed to disable Disconnect: {error}");
                     return;
                 }
 
-                /*
-                 * Disable the inactive implementation before enabling the
-                 * selected implementation.
-                 */
-
                 if enable_connect {
-                    if let Err(error) = database.set_disconnect_enabled(false).await {
-                        tracing::error!("Failed to disable Disconnect: {error}");
-                        return;
-                    }
-
                     if let Err(error) = database.set_connect_enabled(true).await {
                         tracing::error!("Failed to enable Connect: {error}");
                     }
-                } else if enable_disconnect {
-                    if let Err(error) = database.set_connect_enabled(false).await {
-                        tracing::error!("Failed to disable Connect: {error}");
-                        return;
-                    }
-
-                    if let Err(error) = database.set_disconnect_enabled(true).await {
-                        tracing::error!("Failed to enable Disconnect: {error}");
-                    }
-                } else {
-                    if let Err(error) = database.set_connect_enabled(false).await {
-                        tracing::error!("Failed to disable Connect: {error}");
-                    }
-
-                    if let Err(error) = database.set_disconnect_enabled(false).await {
-                        tracing::error!("Failed to disable Disconnect: {error}");
-                    }
+                } else if let Err(error) = database.set_connect_enabled(false).await {
+                    tracing::error!("Failed to disable Connect: {error}");
                 }
             });
         }
@@ -742,9 +533,6 @@ fn shared_playback_group(
 
     group.add(&playback_type_row);
     group.add(&connect_device_row);
-    group.add(&server_row);
-    group.add(&password_row);
-    group.add(&disconnect_device_row);
     group.add(&save);
 
     validate();

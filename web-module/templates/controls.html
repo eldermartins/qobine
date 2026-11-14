@@ -1,9 +1,0 @@
-<div
-  hx-get="/controls/content"
-  hx-swap="outerHTML"
-  hx-trigger="tracklist"
-  data-sse="tracklist"
-  hx-target="#player-controls"
->
-  @defer (controls-content.html; playing_info=playing_info) {}
-</div>

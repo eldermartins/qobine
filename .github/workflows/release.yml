@@ -16,22 +16,8 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            features: ""
           - os: ubuntu-24.04-arm
             target: aarch64-unknown-linux-gnu
-            features: "gpio"
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            features: ""
-          - os: macos-latest
-            target: aarch64-apple-darwin
-            features: ""
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            features: ""
-          - os: windows-11-arm
-            target: aarch64-pc-windows-msvc
-            features: ""
 
     runs-on: ${{ matrix.os }}
 
@@ -40,48 +26,15 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Install dependencies
-        if: startsWith(matrix.os, 'ubuntu')
         run: |
           sudo apt-get update
           sudo apt-get install -y pkg-config libasound2-dev
-
-      - name: Build and upload tui
-        uses: taiki-e/upload-rust-binary-action@v1
-        with:
-          bin: qobine-tui
-          target: ${{ matrix.target }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and upload qobine-web
-        uses: taiki-e/upload-rust-binary-action@v1
-        with:
-          bin: qobine-web
-          target: ${{ matrix.target }}
-          features: ${{ matrix.features || '' }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and upload qobine-rfid
-        uses: taiki-e/upload-rust-binary-action@v1
-        with:
-          bin: qobine-rfid
-          target: ${{ matrix.target }}
-          features: ${{ matrix.features || '' }}
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and upload qobine-connect
         uses: taiki-e/upload-rust-binary-action@v1
         with:
           bin: qobine-connect
           target: ${{ matrix.target }}
-          features: ${{ matrix.features || '' }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and upload qobine-disconnect-server
-        uses: taiki-e/upload-rust-binary-action@v1
-        with:
-          bin: disconnect-server
-          target: ${{ matrix.target }}
-          features: ${{ matrix.features || '' }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
   flatpak:

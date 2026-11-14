@@ -5,7 +5,7 @@ use std::{
 };
 
 use adw::prelude::*;
-use cli_module::{SharedPlaybackDevice, SharedPlaybackDeviceId};
+use connect_module::ConnectDevice;
 use gtk4 as gtk;
 use libadwaita as adw;
 
@@ -37,7 +37,7 @@ pub struct NowPlayingBar {
     progress_total_label: gtk::Label,
 
     connect_button: gtk::MenuButton,
-    available_devices: Rc<RefCell<Vec<SharedPlaybackDevice>>>,
+    available_devices: Rc<RefCell<Vec<ConnectDevice>>>,
 
     on_open_album: Rc<dyn Fn(AlbumHeaderInfo)>,
     on_open_artist: Rc<dyn Fn(ArtistHeaderInfo)>,
@@ -49,14 +49,14 @@ pub struct NowPlayingBar {
 impl NowPlayingBar {
     pub fn new(
         controls: Controls,
-        set_connect_active_device: UnboundedSender<SharedPlaybackDeviceId>,
+        set_connect_active_device: UnboundedSender<i32>,
         on_open_album: Rc<dyn Fn(AlbumHeaderInfo)>,
         on_open_artist: Rc<dyn Fn(ArtistHeaderInfo)>,
         on_open_playlist: Rc<dyn Fn(PlaylistHeaderInfo)>,
         volume: f32,
     ) -> Self {
         let setting_volume_from_backend = Rc::new(Cell::new(false));
-        let available_devices = Rc::new(RefCell::new(Vec::<SharedPlaybackDevice>::new()));
+        let available_devices = Rc::new(RefCell::new(Vec::<ConnectDevice>::new()));
 
         let title_label = gtk::Label::builder()
             .halign(gtk::Align::Fill)
@@ -150,7 +150,7 @@ impl NowPlayingBar {
                     let row_popover = popover.clone();
 
                     row.connect_activated(move |_| {
-                        let _ = row_sender.send(row_device.id.clone());
+                        let _ = row_sender.send(row_device.id);
                         row_popover.popdown();
                     });
 
@@ -398,7 +398,7 @@ impl NowPlayingBar {
         self.setting_volume_from_backend.set(false);
     }
 
-    pub fn set_output_devices(&self, available_devices: Vec<SharedPlaybackDevice>) {
+    pub fn set_output_devices(&self, available_devices: Vec<ConnectDevice>) {
         let has_devices = !available_devices.is_empty();
 
         *self.available_devices.borrow_mut() = available_devices;

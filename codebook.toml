@@ -1,9 +1,7 @@
 words = [
     "alsa",
     "hifi",
-    "htmx",
     "mdat",
-    "mousedown",
     "mpris",
     "mseconds",
     "qbz",
@@ -14,8 +12,6 @@ words = [
     "revealer",
     "rfid",
     "streaminfo",
-    "subtab",
-    "tera",
     "tracklist",
     "unstreamable",
 ]

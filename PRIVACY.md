@@ -18,9 +18,9 @@ Audio may be cached locally. Artwork and other remote resources are fetched as n
 
 Protect your user account and local files with the operating system's normal account and filesystem protections. Do not share the database, authentication tokens, cookies or unredacted diagnostic logs.
 
-## Optional shared playback
+## Optional Qobuz Connect
 
-The inherited code includes optional Qobuz Connect and Disconnect functionality. When enabled, it may discover or communicate with playback devices on your network and, for Disconnect, with a configured server. Do not enable these features on untrusted networks without understanding that configuration.
+The inherited code includes optional Qobuz Connect functionality. When enabled, it may discover or communicate with playback devices on your network. Do not enable this feature on untrusted networks without understanding that behavior.
 
 ## Telemetry and fork infrastructure
 

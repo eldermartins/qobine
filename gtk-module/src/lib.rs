@@ -1,7 +1,7 @@
 use std::{cell::RefCell, rc::Rc, sync::Arc, time::Duration};
 
 use adw::{Application, prelude::*};
-use cli_module::{SharedPlaybackConfig, SharedPlaybackDevice, SharedPlaybackDeviceId};
+use connect_module::ConnectDevice;
 use controls_module::{
     ExitSender, PositionReceiver, Status, StatusReceiver, TracklistReceiver, VolumeReceiver,
     controls::Controls, tracklist::Tracklist,
@@ -40,11 +40,11 @@ pub fn init(
     exit_sender: &ExitSender,
     audio_cache_ttl_sender: mpsc::UnboundedSender<u32>,
     broadcast: Arc<NotificationBroadcast>,
-    shared_devices_rx: watch::Receiver<Vec<SharedPlaybackDevice>>,
-    set_active_device_tx: mpsc::UnboundedSender<SharedPlaybackDeviceId>,
-    shared_playback_config_sender: watch::Sender<SharedPlaybackConfig>,
+    connect_devices_rx: watch::Receiver<Vec<ConnectDevice>>,
+    set_active_device_tx: mpsc::UnboundedSender<i32>,
+    connect_config_sender: watch::Sender<Option<String>>,
 ) -> AppResult<()> {
-    libadwaita::init().map_err(|err| PlayerError::Gtk {
+    libadwaita::init().map_err(|err| PlayerError::ApplicationInit {
         message: err.to_string(),
     })?;
 
@@ -106,9 +106,9 @@ pub fn init(
                 ui_sender.clone(),
                 ui_receiver,
                 &broadcast,
-                shared_devices_rx.clone(),
+                connect_devices_rx.clone(),
                 &set_active_device_tx,
-                shared_playback_config_sender.clone(),
+                connect_config_sender.clone(),
             );
         }
     });
@@ -172,9 +172,9 @@ fn build_ui(
     ui_sender: mpsc::UnboundedSender<UiEvent>,
     ui_receiver: mpsc::UnboundedReceiver<UiEvent>,
     broadcast: &NotificationBroadcast,
-    shared_devices_rx: watch::Receiver<Vec<SharedPlaybackDevice>>,
-    set_active_device_tx: &mpsc::UnboundedSender<SharedPlaybackDeviceId>,
-    shared_playback_config_sender: watch::Sender<SharedPlaybackConfig>,
+    connect_devices_rx: watch::Receiver<Vec<ConnectDevice>>,
+    set_active_device_tx: &mpsc::UnboundedSender<i32>,
+    connect_config_sender: watch::Sender<Option<String>>,
 ) {
     let window = adw::ApplicationWindow::builder()
         .application(app)
@@ -262,8 +262,8 @@ fn build_ui(
         status_receiver,
         position_receiver,
         volume_receiver,
-        shared_playback_config_sender,
-        shared_devices_rx,
+        connect_config_sender,
+        connect_devices_rx,
         broadcast,
         now_playing,
         shell,
@@ -282,8 +282,8 @@ fn setup_listener(
     mut status_receiver: StatusReceiver,
     mut position_receiver: PositionReceiver,
     mut volume_receiver: VolumeReceiver,
-    shared_playback_config_sender: watch::Sender<SharedPlaybackConfig>,
-    mut shared_devices_rx: watch::Receiver<Vec<SharedPlaybackDevice>>,
+    connect_config_sender: watch::Sender<Option<String>>,
+    mut connect_devices_rx: watch::Receiver<Vec<ConnectDevice>>,
     broadcast: &NotificationBroadcast,
     now_playing_bar: NowPlayingBar,
     shell: AppShell,
@@ -330,10 +330,10 @@ fn setup_listener(
                     }
                 }
 
-                Ok(()) = shared_devices_rx.changed() => {
-                    let connect_available_devices = shared_devices_rx.borrow_and_update().to_vec();
+                Ok(()) = connect_devices_rx.changed() => {
+                    let connect_available_devices = connect_devices_rx.borrow_and_update().to_vec();
 
-                    if let Err(err) =sender.send(UiEvent::Connect(connect_available_devices))
+                    if let Err(err) =sender.send(UiEvent::ConnectDevices(connect_available_devices))
                     {
                         tracing::error!("{err}");
                     }
@@ -402,10 +402,10 @@ fn setup_listener(
                     window.close();
                     break;
                 }
-                UiEvent::SharedPlaybackConfig(shared_playback_config) => {
-                    _ = shared_playback_config_sender.send(shared_playback_config);
+                UiEvent::ConnectConfig(connect_config) => {
+                    _ = connect_config_sender.send(connect_config);
                 }
-                UiEvent::Connect(devices) => {
+                UiEvent::ConnectDevices(devices) => {
                     now_playing_bar.set_output_devices(devices);
                 }
             }
@@ -422,8 +422,8 @@ enum UiEvent {
     FavoritesChanged,
     Exit,
     Toast(String),
-    SharedPlaybackConfig(SharedPlaybackConfig),
-    Connect(Vec<SharedPlaybackDevice>),
+    ConnectConfig(Option<String>),
+    ConnectDevices(Vec<ConnectDevice>),
 }
 
 fn oauth_login_window(
